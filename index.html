@@ -68,7 +68,7 @@
 <body>
 
 <div class="card">
-    <h2 style="margin: 0; font-weight: 900; letter-spacing: -1px; color: #fff;">SPEEDTEST By <span style="color: var(--accent);">LEO</span></h2>
+    <h2 style="margin: 0; font-weight: 900; letter-spacing: -1px; color: #fff;">LANGEO <span style="color: var(--accent);">NET</span></h2>
     <p style="font-size: 0.6rem; color: var(--accent-2); margin-bottom: 15px; font-weight: 900; letter-spacing: 2px;">VIRTUAL ACCELERATOR</p>
     
     <div class="info-bar" id="network-info">
@@ -116,7 +116,6 @@ const UP_BACKUP = "https://httpbin.org/post";
 
 let finalDownload = 0;
 let finalUpload = 0;
-
 async function getNetworkDetails() {
     try {
         const res = await fetch('https://ipinfo.io/json');
@@ -135,40 +134,7 @@ async function getNetworkDetails() {
         document.getElementById('ip-display').innerText = "Network detected";
     }
 }
-
-function getRealLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(async function(pos) {
-
-            const lat = pos.coords.latitude;
-            const lon = pos.coords.longitude;
-
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-                const data = await res.json();
-
-                const city =
-                    data.address.city ||
-                    data.address.town ||
-                    data.address.village ||
-                    data.address.county ||
-                    "Unknown";
-
-                const ipText = document.getElementById("ip-display").innerText.split("•")[0];
-
-                document.getElementById("ip-display").innerText = `${ipText} • ${city}`;
-
-            } catch (err) {
-                console.log("GPS location failed");
-            }
-
-        });
-    }
-}
-
-// jalankan saat halaman dibuka
 getNetworkDetails();
-getRealLocation();
 
 async function runFullTest() {
     const btn = document.getElementById('btn');
@@ -192,6 +158,7 @@ async function runFullTest() {
     evaluate(finalDownload, avgPing);
     btn.disabled = false;
     btn.innerText = "BOOST AGAIN";
+    // Memastikan label kembali ke Mbps setelah test selesai
     document.getElementById('test-label').innerText = "Mbps";
 }
 
@@ -260,4 +227,4 @@ function evaluate(speed, ping) {
 }
 </script>
 </body>
-</html></html>
+</html>
