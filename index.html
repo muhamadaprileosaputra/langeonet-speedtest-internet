@@ -119,15 +119,56 @@ let finalUpload = 0;
 
 async function getNetworkDetails() {
     try {
-        const res = await fetch('https://ipapi.co/json/');
+        const res = await fetch('https://ipinfo.io/json');
         const data = await res.json();
-        document.getElementById('isp-display').innerText = data.org || "Unknown ISP";
-        document.getElementById('ip-display').innerText = `${data.ip} • ${data.city}`;
+
+        // Hapus ASN seperti AS4761
+        let isp = data.org ? data.org.replace(/^AS\d+\s*/, '') : "Unknown ISP";
+
+        document.getElementById('isp-display').innerText = isp;
+
+        document.getElementById('ip-display').innerText =
+            `${data.ip} • ${data.city || "Unknown City"}`;
+
     } catch (e) {
         document.getElementById('isp-display').innerText = "System Online";
+        document.getElementById('ip-display').innerText = "Network detected";
     }
 }
+
+function getRealLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async function(pos) {
+
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+                const data = await res.json();
+
+                const city =
+                    data.address.city ||
+                    data.address.town ||
+                    data.address.village ||
+                    data.address.county ||
+                    "Unknown";
+
+                const ipText = document.getElementById("ip-display").innerText.split("•")[0];
+
+                document.getElementById("ip-display").innerText = `${ipText} • ${city}`;
+
+            } catch (err) {
+                console.log("GPS location failed");
+            }
+
+        });
+    }
+}
+
+// jalankan saat halaman dibuka
 getNetworkDetails();
+getRealLocation();
 
 async function runFullTest() {
     const btn = document.getElementById('btn');
@@ -151,7 +192,6 @@ async function runFullTest() {
     evaluate(finalDownload, avgPing);
     btn.disabled = false;
     btn.innerText = "BOOST AGAIN";
-    // Memastikan label kembali ke Mbps setelah test selesai
     document.getElementById('test-label').innerText = "Mbps";
 }
 
@@ -220,4 +260,4 @@ function evaluate(speed, ping) {
 }
 </script>
 </body>
-</html>
+</html></html>
