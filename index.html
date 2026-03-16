@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LANGEO NET - Ultra Speed</title>
+    <style>
+        :root { 
+            --accent: #00ffff; 
+            --accent-2: #bd00ff;
+            --accent-glow: rgba(0, 255, 255, 0.6);
+            --bg: #020408; 
+            --card-bg: rgba(10, 15, 25, 0.95); 
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(0, 255, 255, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(189, 0, 255, 0.05) 0%, transparent 40%);
+            color: white; 
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; margin: 0; overflow-x: hidden;
+        }
+
+        .card { 
+            background: var(--card-bg); backdrop-filter: blur(20px);
+            border: 2px solid var(--accent); padding: 30px; 
+            border-radius: 35px; width: 90%; max-width: 400px; 
+            text-align: center; box-shadow: 0 0 40px rgba(0, 255, 255, 0.2);
+        }
+
+        .info-bar { 
+            background: rgba(0, 0, 0, 0.5); padding: 15px; 
+            border-radius: 20px; margin-bottom: 20px; 
+            font-size: 0.85rem; border: 1px solid rgba(0, 242, 255, 0.2);
+        }
+        
+        .isp-label { color: var(--accent); font-weight: bold; font-size: 0.7rem; text-transform: uppercase; }
+        .isp-name { color: var(--accent-2); font-weight: 900; font-size: 1rem; display: block; }
+
+        .speed-value { font-size: 5rem; font-weight: 900; color: #fff; margin: 0; text-shadow: 0 0 30px var(--accent); }
+        /* Bagian Unit yang diubah: text-transform dihilangkan agar case-sensitive */
+        .unit { font-size: 0.9rem; color: var(--accent); letter-spacing: 4px; font-weight: 900; }
+        
+        .progress-bar { height: 10px; background: rgba(255, 255, 255, 0.1); margin: 20px 0; border-radius: 20px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); width: 0%; transition: 0.1s linear; box-shadow: 0 0 15px var(--accent); }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat-box { background: rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .stat-label { font-size: 0.6rem; color: #aaa; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 1px; }
+        .stat-val { font-size: 1.1rem; font-weight: 900; color: #fff; }
+
+        #rating-result { margin-top: 20px; background: rgba(189, 0, 255, 0.15); padding: 15px; border-radius: 20px; border: 1px dashed var(--accent-2); }
+        #stars { font-size: 2rem; color: #ff00ff; text-shadow: 0 0 10px #ff00ff; }
+
+        button { 
+            background: linear-gradient(45deg, var(--accent), var(--accent-2)); 
+            color: #fff; border: none; padding: 20px; width: 100%; border-radius: 22px; 
+            font-weight: 900; cursor: pointer; margin-top: 25px; font-size: 1rem; text-transform: uppercase;
+            box-shadow: 0 10px 30px rgba(189, 0, 255, 0.3); transition: 0.3s;
+        }
+        button:hover { transform: scale(1.02); filter: brightness(1.2); }
+        button:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2 style="margin: 0; font-weight: 900; letter-spacing: -1px; color: #fff;">LANGEO <span style="color: var(--accent);">NET</span></h2>
+    <p style="font-size: 0.6rem; color: var(--accent-2); margin-bottom: 15px; font-weight: 900; letter-spacing: 2px;">VIRTUAL ACCELERATOR</p>
+    
+    <div class="info-bar" id="network-info">
+        <span class="isp-label">Network Status</span>
+        <span class="isp-name" id="isp-display">Detecting ISP...</span>
+        <span id="ip-display" style="font-size: 0.7rem; opacity: 0.6;">Scanning IP...</span>
+    </div>
+
+    <div class="speed-display">
+        <p class="speed-value" id="main-speed">0.0</p>
+        <p class="unit" id="test-label">Mbps</p>
+        <div class="progress-bar"><div class="progress-fill" id="p-bar"></div></div>
+    </div>
+
+    <div class="grid">
+        <div class="stat-box">
+            <div class="stat-label">Ping / Jitter</div>
+            <div class="stat-val"><span id="ping">-</span> / <span id="jitter">-</span> <small style="font-size: 0.6rem; color: var(--accent);">ms</small></div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Download</div>
+            <div class="stat-val" id="down-val">0.0 <small>Mbps</small></div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Upload</div>
+            <div class="stat-val" id="up-val">0.0 <small>Mbps</small></div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Processing</div>
+            <div class="stat-val" id="mbs-val">0.0 <small style="font-size: 0.6rem;">MB/s</small></div>
+        </div>
+    </div>
+
+    <div id="rating-result" style="display:none">
+        <div id="stars"></div>
+        <div id="rating-text" style="font-weight: 900; text-transform: uppercase; font-size: 0.9rem;"></div>
+    </div>
+
+    <button id="btn" onclick="runFullTest()">BOOST TEST</button>
+</div>
+
+<script>
+const SPEED_API = "https://speed.cloudflare.com";
+const UP_BACKUP = "https://httpbin.org/post"; 
+
+let finalDownload = 0;
+let finalUpload = 0;
+
+async function getNetworkDetails() {
+    try {
+        const res = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
+        document.getElementById('isp-display').innerText = data.org || "Unknown ISP";
+        document.getElementById('ip-display').innerText = `${data.ip} • ${data.city}`;
+    } catch (e) {
+        document.getElementById('isp-display').innerText = "System Online";
+    }
+}
+getNetworkDetails();
+
+async function runFullTest() {
+    const btn = document.getElementById('btn');
+    btn.disabled = true;
+    document.getElementById('rating-result').style.display = "none";
+    
+    document.getElementById('test-label').innerText = "Testing Latency...";
+    let pings = [];
+    for(let i=0; i<8; i++) {
+        const start = performance.now();
+        await fetch(SPEED_API + "/__up", { method: 'POST', body: 'p', mode: 'no-cors' }).catch(()=>{});
+        pings.push(performance.now() - start);
+        document.getElementById('ping').innerText = Math.round(pings[pings.length-1]);
+    }
+    const avgPing = pings.reduce((a,b)=>a+b)/pings.length;
+    document.getElementById('jitter').innerText = Math.round(Math.max(...pings) - Math.min(...pings));
+
+    await measure('DOWNLOAD');
+    await measure('UPLOAD');
+
+    evaluate(finalDownload, avgPing);
+    btn.disabled = false;
+    btn.innerText = "BOOST AGAIN";
+    // Memastikan label kembali ke Mbps setelah test selesai
+    document.getElementById('test-label').innerText = "Mbps";
+}
+
+function measure(type) {
+    return new Promise((resolve) => {
+        const isDown = type === 'DOWNLOAD';
+        document.getElementById('test-label').innerText = isDown ? "Downloading..." : "Uploading...";
+        
+        const startTime = performance.now();
+        const durationLimit = 8000; 
+        const xhr = new XMLHttpRequest();
+        
+        if (isDown) {
+            xhr.open("GET", SPEED_API + "/__down?bytes=50000000&cb=" + Math.random(), true);
+            xhr.onprogress = (e) => updateUI(e.loaded, startTime, isDown);
+        } else {
+            xhr.open("POST", UP_BACKUP, true);
+            xhr.upload.onprogress = (e) => updateUI(e.loaded, startTime, isDown);
+        }
+
+        const timeout = setTimeout(() => { xhr.abort(); resolve(); }, durationLimit);
+
+        xhr.onload = xhr.onerror = () => {
+            clearTimeout(timeout);
+            resolve();
+        };
+        
+        if (isDown) {
+            xhr.send();
+        } else {
+            const data = new Uint8Array(10 * 1024 * 1024);
+            for(let i=0; i<data.length; i++) data[i] = Math.random() * 255;
+            xhr.send(data);
+        }
+    });
+}
+
+function updateUI(bytes, start, isDown) {
+    const duration = (performance.now() - start) / 1000;
+    if (duration <= 0) return;
+    
+    const mbps = ((bytes * 8) / duration) / 1000000;
+    const mbs = (bytes / duration) / 1048576;
+
+    document.getElementById('main-speed').innerText = mbps.toFixed(1);
+    document.getElementById('mbs-val').innerHTML = `${mbs.toFixed(1)} <small>MB/s</small>`;
+    document.getElementById('p-bar').style.width = Math.min((duration / 8) * 100, 100) + "%";
+    
+    if (isDown) {
+        document.getElementById('down-val').innerHTML = `${mbps.toFixed(1)} <small>Mbps</small>`;
+        finalDownload = mbps;
+    } else {
+        document.getElementById('up-val').innerHTML = `${mbps.toFixed(1)} <small>Mbps</small>`;
+        finalUpload = mbps;
+    }
+}
+
+function evaluate(speed, ping) {
+    let score = speed > 50 ? 6 : speed > 30 ? 5 : speed > 15 ? 4 : speed > 7 ? 3 : 2;
+    if (ping < 50 && score < 6) score++;
+    document.getElementById('stars').innerHTML = "★".repeat(score) + "☆".repeat(6-score);
+    const msgs = ["Slow", "Moderate", "Good", "Fast", "Hyper", "Godlike"];
+    document.getElementById('rating-text').innerText = msgs[score-1];
+    document.getElementById('rating-result').style.display = "block";
+    document.getElementById('p-bar').style.width = "100%";
+}
+</script>
+</body>
+</html>
