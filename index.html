@@ -37,11 +37,15 @@
             font-size: 0.85rem; border: 1px solid rgba(0, 242, 255, 0.2);
         }
         
-        .isp-label { color: var(--accent); font-weight: bold; font-size: 0.7rem; text-transform: uppercase; }
+        .isp-label { color: var(--accent); font-weight: bold; font-size: 0.7rem; text-transform: uppercase; display: block; margin-top: 8px; }
+        .isp-label:first-child { margin-top: 0; }
+        
         .isp-name { color: var(--accent-2); font-weight: 900; font-size: 1rem; display: block; }
+        
+        /* Style khusus untuk Server Location */
+        #server-display { color: #fff; font-weight: 900; font-size: 1rem; }
 
-        .speed-value { font-size: 5rem; font-weight: 900; color: #fff; margin: 0; text-shadow: 0 0 30px var(--accent); }
-        /* Bagian Unit yang diubah: text-transform dihilangkan agar case-sensitive */
+        .speed-value { font-size: 5rem; font-weight: 900; color: #fff; margin: 0; text-shadow: 0 0 30px var(--accent); line-height: 1; }
         .unit { font-size: 0.9rem; color: var(--accent); letter-spacing: 4px; font-weight: 900; }
         
         .progress-bar { height: 10px; background: rgba(255, 255, 255, 0.1); margin: 20px 0; border-radius: 20px; overflow: hidden; }
@@ -72,9 +76,16 @@
     <p style="font-size: 0.6rem; color: var(--accent-2); margin-bottom: 15px; font-weight: 900; letter-spacing: 2px;">Professional Network Diagnostic Tool</p>
     
     <div class="info-bar" id="network-info">
-        <span class="isp-label">Network Status</span>
+        <!-- Bagian ISP -->
+        <span class="isp-label">Provider</span>
         <span class="isp-name" id="isp-display">Detecting ISP...</span>
-        <span id="ip-display" style="font-size: 0.7rem; opacity: 0.6;">Scanning IP...</span>
+
+        <!-- Bagian Server (Yang diminta) -->
+        <span class="isp-label">Server</span>
+        <span id="server-display">Locating...</span>
+
+        <!-- Bagian IP -->
+        <span id="ip-display" style="font-size: 0.7rem; opacity: 0.6; display: block; margin-top: 8px;">Scanning IP...</span>
     </div>
 
     <div class="speed-display">
@@ -116,21 +127,30 @@ const UP_BACKUP = "https://httpbin.org/post";
 
 let finalDownload = 0;
 let finalUpload = 0;
+
 async function getNetworkDetails() {
     try {
         const res = await fetch('https://ipinfo.io/json');
         const data = await res.json();
 
-        // Hapus ASN seperti AS4761
+        // 1. Proses ISP (Hapus ASN)
         let isp = data.org ? data.org.replace(/^AS\d+\s*/, '') : "Unknown ISP";
-
         document.getElementById('isp-display').innerText = isp;
 
-        document.getElementById('ip-display').innerText =
-            `${data.ip} • ${data.city || "Unknown City"}`;
+        // 2. Proses Server (Kota, Kode Negara) -> INI YANG DIMINTA
+        // data.country sudah berupa kode (ID, US, SG, dll)
+        let city = data.city || "Unknown";
+        let country = data.country || "XX";
+        
+        // Format: Palembang, ID
+        document.getElementById('server-display').innerText = `${city}, ${country}`;
+
+        // 3. Proses IP
+        document.getElementById('ip-display').innerText = `IP: ${data.ip}`;
 
     } catch (e) {
         document.getElementById('isp-display').innerText = "System Online";
+        document.getElementById('server-display').innerText = "Local Host";
         document.getElementById('ip-display').innerText = "Network detected";
     }
 }
@@ -158,7 +178,6 @@ async function runFullTest() {
     evaluate(finalDownload, avgPing);
     btn.disabled = false;
     btn.innerText = "BOOST AGAIN";
-    // Memastikan label kembali ke Mbps setelah test selesai
     document.getElementById('test-label').innerText = "Mbps";
 }
 
