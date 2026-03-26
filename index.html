@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- KODE PENTING UNTUK MENCEGAH CACHE (Supaya Desktop & HP Seragam) -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <title>SPEEDTEST By LEO - Uji Kecepatan Internet</title>
     <style>
         :root { 
@@ -42,7 +48,7 @@
         
         .isp-name { color: var(--accent-2); font-weight: 900; font-size: 1rem; display: block; }
         
-        /* Style khusus untuk Server Location */
+        /* Style untuk Server Location */
         #server-display { color: #fff; font-weight: 900; font-size: 1rem; }
 
         .speed-value { font-size: 5rem; font-weight: 900; color: #fff; margin: 0; text-shadow: 0 0 30px var(--accent); line-height: 1; }
@@ -76,15 +82,15 @@
     <p style="font-size: 0.6rem; color: var(--accent-2); margin-bottom: 15px; font-weight: 900; letter-spacing: 2px;">Professional Network Diagnostic Tool</p>
     
     <div class="info-bar" id="network-info">
-        <!-- Bagian ISP -->
+        <!-- ISP -->
         <span class="isp-label">Provider</span>
         <span class="isp-name" id="isp-display">Detecting ISP...</span>
 
-        <!-- Bagian Server (Yang diminta) -->
+        <!-- Server (Lokasi) -->
         <span class="isp-label">Server</span>
         <span id="server-display">Locating...</span>
 
-        <!-- Bagian IP -->
+        <!-- IP Address -->
         <span id="ip-display" style="font-size: 0.7rem; opacity: 0.6; display: block; margin-top: 8px;">Scanning IP...</span>
     </div>
 
@@ -137,12 +143,12 @@ async function getNetworkDetails() {
         let isp = data.org ? data.org.replace(/^AS\d+\s*/, '') : "Unknown ISP";
         document.getElementById('isp-display').innerText = isp;
 
-        // 2. Proses Server (Kota, Kode Negara) -> INI YANG DIMINTA
-        // data.country sudah berupa kode (ID, US, SG, dll)
+        // 2. Proses Server (Kota, Negara)
+        // data.country mengembalikan kode negara (ID, US, dll)
         let city = data.city || "Unknown";
         let country = data.country || "XX";
         
-        // Format: Palembang, ID
+        // Format: Kota, ID (Contoh: Palembang, ID)
         document.getElementById('server-display').innerText = `${city}, ${country}`;
 
         // 3. Proses IP
