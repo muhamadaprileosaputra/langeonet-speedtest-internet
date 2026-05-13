@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- KODE PENTING UNTUK MENCEGAH CACHE (Supaya Desktop & HP Seragam) -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -48,7 +47,6 @@
         
         .isp-name { color: var(--accent-2); font-weight: 900; font-size: 1rem; display: block; }
         
-        /* Style untuk Server Location */
         #server-display { color: #fff; font-weight: 900; font-size: 1rem; }
 
         .speed-value { font-size: 5rem; font-weight: 900; color: #fff; margin: 0; text-shadow: 0 0 30px var(--accent); line-height: 1; }
@@ -61,6 +59,27 @@
         .stat-box { background: rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.05); }
         .stat-label { font-size: 0.6rem; color: #aaa; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 1px; }
         .stat-val { font-size: 1.1rem; font-weight: 900; color: #fff; }
+
+        .stat-box.wide { grid-column: 1 / -1; }
+
+        .proc-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .proc-block {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px 6px;
+            border-radius: 14px;
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .proc-block .proc-arrow { font-size: 0.6rem; color: var(--accent); font-weight: 900; display: block; letter-spacing: 1px; margin-bottom: 2px; }
+        .proc-block .proc-num { font-size: 1.15rem; font-weight: 900; color: #fff; }
+        .proc-block .proc-unit { font-size: 0.55rem; color: #888; font-weight: 700; }
 
         #rating-result { margin-top: 20px; background: rgba(189, 0, 255, 0.15); padding: 15px; border-radius: 20px; border: 1px dashed var(--accent-2); }
         #stars { font-size: 2rem; color: #ff00ff; text-shadow: 0 0 10px #ff00ff; }
@@ -82,16 +101,14 @@
     <p style="font-size: 0.6rem; color: var(--accent-2); margin-bottom: 15px; font-weight: 900; letter-spacing: 2px;">Professional Network Diagnostic Tool</p>
     
     <div class="info-bar" id="network-info">
-        <!-- ISP -->
         <span class="isp-label">Provider (ISP)</span>
         <span class="isp-name" id="isp-display">Detecting ISP...</span>
 
-        <!-- Server (Lokasi) -->
         <span class="isp-label">Server</span>
         <span id="server-display">Locating...</span>
 
-        <!-- IP Address -->
-        <span id="ip-display" style="font-size: 0.7rem; opacity: 0.6; display: block; margin-top: 8px;">Scanning IP...</span>
+        <span class="isp-label">IP Address</span>
+        <span id="ip-display" style="color: var(--accent-2); font-weight: 900; font-size: 0.85rem;">Scanning IP...</span>
     </div>
 
     <div class="speed-display">
@@ -106,6 +123,11 @@
             <div class="stat-val"><span id="ping">-</span> / <span id="jitter">-</span> <small style="font-size: 0.6rem; color: var(--accent);">ms</small></div>
         </div>
         <div class="stat-box">
+            <div class="stat-label">Device Type</div>
+            <div class="stat-val" id="device-display" style="color: var(--accent);">Detecting...</div>
+        </div>
+
+        <div class="stat-box">
             <div class="stat-label">Download</div>
             <div class="stat-val" id="down-val">0.0 <small>Mbps</small></div>
         </div>
@@ -113,9 +135,21 @@
             <div class="stat-label">Upload</div>
             <div class="stat-val" id="up-val">0.0 <small>Mbps</small></div>
         </div>
-        <div class="stat-box">
-            <div class="stat-label">Processing</div>
-            <div class="stat-val" id="mbs-val">0.0 <small style="font-size: 0.6rem;">MB/s</small></div>
+
+        <div class="stat-box wide">
+            <div class="stat-label">Processing MB / detik</div>
+            <div class="proc-row">
+                <div class="proc-block">
+                    <span class="proc-arrow">&#8595; DOWNLOAD</span>
+                    <span class="proc-num" id="proc-down">0.00</span>
+                    <span class="proc-unit">MB/s</span>
+                </div>
+                <div class="proc-block">
+                    <span class="proc-arrow">&#8593; UPLOAD</span>
+                    <span class="proc-num" id="proc-up">0.00</span>
+                    <span class="proc-unit">MB/s</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -134,25 +168,32 @@ const UP_BACKUP = "https://httpbin.org/post";
 let finalDownload = 0;
 let finalUpload = 0;
 
+function getDeviceInfo() {
+    const ua = navigator.userAgent;
+    let device = "Desktop";
+
+    if (/Mobi|Android.*Mobile|iPhone|iPod|BlackBerry|IEMobile|Opera Mini|Kindle|Silk-Accelerated|(hpw|web)OS|Mobile/i.test(ua)) {
+        device = "Mobile";
+    } else if (/iPad|Android(?!.*Mobile)|Tablet|PlayBook|Silk/i.test(ua)) {
+        device = "Mobile";
+    }
+
+    document.getElementById('device-display').innerText = device;
+}
+
 async function getNetworkDetails() {
     try {
         const res = await fetch('https://ipinfo.io/json');
         const data = await res.json();
 
-        // 1. Proses ISP (Hapus ASN)
         let isp = data.org ? data.org.replace(/^AS\d+\s*/, '') : "Unknown ISP";
         document.getElementById('isp-display').innerText = isp;
 
-        // 2. Proses Server (Kota, Negara)
-        // data.country mengembalikan kode negara (ID, US, dll)
         let city = data.city || "Unknown";
         let country = data.country || "XX";
-        
-        // Format: Kota, ID (Contoh: Palembang, ID)
         document.getElementById('server-display').innerText = `${city}, ${country}`;
 
-        // 3. Proses IP
-        document.getElementById('ip-display').innerText = `IP: ${data.ip}`;
+        document.getElementById('ip-display').innerText = data.ip;
 
     } catch (e) {
         document.getElementById('isp-display').innerText = "System Online";
@@ -160,6 +201,8 @@ async function getNetworkDetails() {
         document.getElementById('ip-display').innerText = "Network detected";
     }
 }
+
+getDeviceInfo();
 getNetworkDetails();
 
 async function runFullTest() {
@@ -167,6 +210,9 @@ async function runFullTest() {
     btn.disabled = true;
     document.getElementById('rating-result').style.display = "none";
     
+    document.getElementById('proc-down').innerText = "0.00";
+    document.getElementById('proc-up').innerText = "0.00";
+
     document.getElementById('test-label').innerText = "Testing Latency...";
     let pings = [];
     for(let i=0; i<8; i++) {
@@ -226,17 +272,18 @@ function updateUI(bytes, start, isDown) {
     if (duration <= 0) return;
     
     const mbps = ((bytes * 8) / duration) / 1000000;
-    const mbs = (bytes / duration) / 1048576;
+    const mbs = mbps / 8;
 
     document.getElementById('main-speed').innerText = mbps.toFixed(1);
-    document.getElementById('mbs-val').innerHTML = `${mbs.toFixed(1)} <small>MB/s</small>`;
     document.getElementById('p-bar').style.width = Math.min((duration / 8) * 100, 100) + "%";
     
     if (isDown) {
         document.getElementById('down-val').innerHTML = `${mbps.toFixed(1)} <small>Mbps</small>`;
+        document.getElementById('proc-down').innerText = mbs.toFixed(2);
         finalDownload = mbps;
     } else {
         document.getElementById('up-val').innerHTML = `${mbps.toFixed(1)} <small>Mbps</small>`;
+        document.getElementById('proc-up').innerText = mbs.toFixed(2);
         finalUpload = mbps;
     }
 }
